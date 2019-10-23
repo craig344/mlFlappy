@@ -1,17 +1,11 @@
 from itertools import cycle
-from bot import Bot
 
 import random
 import sys
 
-import argparse
-import pickle
-
 import pygame
 from pygame.locals import *
 
-# Initialize the bot
-bot = Bot()
 
 SCREENWIDTH  = 288
 SCREENHEIGHT = 512
@@ -19,7 +13,7 @@ SCREENHEIGHT = 512
 PIPEGAPSIZE  = 100 # gap between upper and lower part of pipe
 BASEY        = SCREENHEIGHT * 0.79
 # image, sound and hitmask  dicts
-IMAGES, SOUNDS, HITMASKS = {}, {}, {}
+IMAGES, HITMASKS = {}, {}
 
 # list of all possible players (tuple of 3 positions of flap)
 PLAYERS_LIST = (
@@ -58,14 +52,9 @@ PIPES_LIST = (
 
 
 def main():
-    global SCREEN, FPSCLOCK, FPS, bot
+    global SCREEN, FPSCLOCK, FPS
 
-    parser = argparse.ArgumentParser("flappy.py")
-    parser.add_argument('--fps', type=int, default=60, help='number of frames per second')
-    parser.add_argument('--dump_hitmasks', action='store_true', help='dump hitmasks to file and exit')
-    args = parser.parse_args()
-
-    FPS = args.fps
+    FPS = 60
 
     pygame.init()
     FPSCLOCK = pygame.time.Clock()
@@ -92,18 +81,6 @@ def main():
     IMAGES['message'] = pygame.image.load('assets/sprites/message.png').convert_alpha()
     # base (ground) sprite
     IMAGES['base'] = pygame.image.load('assets/sprites/base.png').convert_alpha()
-
-    # sounds
-    if 'win' in sys.platform:
-        soundExt = '.wav'
-    else:
-        soundExt = '.ogg'
-
-    SOUNDS['die']    = pygame.mixer.Sound('assets/audio/die' + soundExt)
-    SOUNDS['hit']    = pygame.mixer.Sound('assets/audio/hit' + soundExt)
-    SOUNDS['point']  = pygame.mixer.Sound('assets/audio/point' + soundExt)
-    SOUNDS['swoosh'] = pygame.mixer.Sound('assets/audio/swoosh' + soundExt)
-    SOUNDS['wing']   = pygame.mixer.Sound('assets/audio/wing' + soundExt)
 
     while True:
         # select random background sprites
@@ -139,14 +116,8 @@ def main():
             getHitmask(IMAGES['player'][2]),
         )
 
-        if args.dump_hitmasks:
-            with open('hitmasks_data.pkl', 'wb') as output:
-                pickle.dump(HITMASKS, output, pickle.HIGHEST_PROTOCOL)
-            sys.exit()
-
         movementInfo = showWelcomeAnimation()
         crashInfo = mainGame(movementInfo)
-        showGameOverScreen(crashInfo)
 
 
 def showWelcomeAnimation():
@@ -172,22 +143,6 @@ def showWelcomeAnimation():
 
 
     while True:
-        ''' De-activated the press key functionality
-
-        for event in pygame.event.get():
-            if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
-                pygame.quit()
-                sys.exit()
-            if event.type == KEYDOWN and (event.key == K_SPACE or event.key == K_UP):
-                # make first flap sound and return values for mainGame
-                SOUNDS['wing'].play()
-                return {
-                    'playery': playery + playerShmVals['val'],
-                    'basex': basex,
-                    'playerIndexGen': playerIndexGen,
-                }
-        '''
-        SOUNDS['wing'].play()
         return {
             'playery': playery + playerShmVals['val'],
             'basex': basex,
@@ -263,20 +218,11 @@ def mainGame(movementInfo):
                 if playery > -2 * IMAGES['player'][0].get_height():
                     playerVelY = playerFlapAcc
                     playerFlapped = True
-                    SOUNDS['wing'].play()
-
-        if bot.act(-playerx + myPipe['x'], - playery + myPipe['y'], playerVelY):
-            if playery > -2 * IMAGES['player'][0].get_height():
-                playerVelY = playerFlapAcc
-                playerFlapped = True
-                SOUNDS['wing'].play()
 
         # check for crash here
         crashTest = checkCrash({'x': playerx, 'y': playery, 'index': playerIndex},
                                upperPipes, lowerPipes)
         if crashTest[0]:
-            # Update the q scores
-            bot.update_scores()
 
             return {
                 'y': playery,
@@ -294,7 +240,6 @@ def mainGame(movementInfo):
             pipeMidPos = pipe['x'] + IMAGES['pipe'][0].get_width() / 2
             if pipeMidPos <= playerMidPos < pipeMidPos + 4:
                 score += 1
-                SOUNDS['point'].play()
 
         # playerIndex basex change
         if (loopIter + 1) % 3 == 0:
@@ -344,59 +289,6 @@ def mainGame(movementInfo):
 
         pygame.display.update()
         FPSCLOCK.tick(FPS)
-
-
-def showGameOverScreen(crashInfo):
-    """crashes the player down and shows gameover image"""
-    score = crashInfo['score']
-    playerx = SCREENWIDTH * 0.2
-    playery = crashInfo['y']
-    playerHeight = IMAGES['player'][0].get_height()
-    playerVelY = crashInfo['playerVelY']
-    playerAccY = 2
-
-    basex = crashInfo['basex']
-
-    upperPipes, lowerPipes = crashInfo['upperPipes'], crashInfo['lowerPipes']
-
-    # play hit and die sounds
-    SOUNDS['hit'].play()
-    if not crashInfo['groundCrash']:
-        SOUNDS['die'].play()
-
-    while True:
-        ''' De-activated press key functionality
-        for event in pygame.event.get():
-            if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
-                pygame.quit()
-                sys.exit()
-            if event.type == KEYDOWN and (event.key == K_SPACE or event.key == K_UP):
-                if playery + playerHeight >= BASEY - 1:
-                    return
-        '''
-        return ### Must remove to activate press-key functionality
-
-        # player y shift
-        if playery + playerHeight < BASEY - 1:
-            playery += min(playerVelY, BASEY - playery - playerHeight)
-
-        # player velocity change
-        if playerVelY < 15:
-            playerVelY += playerAccY
-
-        # draw sprites
-        SCREEN.blit(IMAGES['background'], (0,0))
-
-        for uPipe, lPipe in zip(upperPipes, lowerPipes):
-            SCREEN.blit(IMAGES['pipe'][0], (uPipe['x'], uPipe['y']))
-            SCREEN.blit(IMAGES['pipe'][1], (lPipe['x'], lPipe['y']))
-
-        SCREEN.blit(IMAGES['base'], (basex, BASEY))
-        showScore(score)
-        SCREEN.blit(IMAGES['player'][1], (playerx,playery))
-
-        FPSCLOCK.tick(FPS)
-        pygame.display.update()
 
 
 def playerShm(playerShm):
@@ -499,5 +391,4 @@ def getHitmask(image):
             mask[x].append(bool(image.get_at((x,y))[3]))
     return mask
 
-if __name__ == '__main__':
-    main()
+main()
