@@ -1,11 +1,12 @@
 from itertools import cycle
-
+from bot import Bot
 import random
 import sys
 
 import pygame
 from pygame.locals import *
 
+bot = Bot()
 
 SCREENWIDTH  = 288
 SCREENHEIGHT = 512
@@ -52,7 +53,7 @@ PIPES_LIST = (
 
 
 def main():
-    global SCREEN, FPSCLOCK, FPS
+    global SCREEN, FPSCLOCK, FPS, bot
 
     FPS = 60
 
@@ -214,16 +215,16 @@ def mainGame(movementInfo):
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                 pygame.quit()
                 sys.exit()
-            if (event.type == KEYDOWN and (event.key == K_SPACE or event.key == K_UP)):
-                if playery > -2 * IMAGES['player'][0].get_height():
-                    playerVelY = playerFlapAcc
-                    playerFlapped = True
+        if bot.act(myPipe['x'] - playerx, myPipe['y'] - playery, playerVelY):
+            if playery > -2 * IMAGES['player'][0].get_height():
+                playerVelY = playerFlapAcc
+                playerFlapped = True
 
         # check for crash here
         crashTest = checkCrash({'x': playerx, 'y': playery, 'index': playerIndex},
                                upperPipes, lowerPipes)
         if crashTest[0]:
-
+            bot.update_scores()
             return {
                 'y': playery,
                 'groundCrash': crashTest[1],
