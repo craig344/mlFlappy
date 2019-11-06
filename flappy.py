@@ -116,9 +116,10 @@ def main():
             getHitmask(IMAGES['player'][1]),
             getHitmask(IMAGES['player'][2]),
         )
-
         movementInfo = showWelcomeAnimation()
         crashInfo = mainGame(movementInfo)
+        score = crashInfo['score']
+        print(str(bot.gameCNT) + "," + str(score))
 
 
 def showWelcomeAnimation():
