@@ -12,3 +12,13 @@ class Bot(object):
         self.last_state = "420_240_0"
         self.last_action = 0
         self.moves = []
+
+    def load_qvalues(self):
+
+        self.qvalues = {}
+        try:
+            fil = open("qvalues.json", "r")
+        except IOError:
+            return
+        self.qvalues = json.load(fil)
+        fil.close()
