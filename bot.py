@@ -22,3 +22,18 @@ class Bot(object):
             return
         self.qvalues = json.load(fil)
         fil.close()
+
+    def act(self, xdif, ydif, vel):
+
+        state = self.map_state(xdif, ydif, vel)
+        self.moves.append(
+            (self.last_state, self.last_action, state)
+        )
+        self.last_state = state
+
+        if self.qvalues[state][0] >= self.qvalues[state][1]:
+            self.last_action = 0
+            return 0
+        else:
+            self.last_action = 1
+            return 1
