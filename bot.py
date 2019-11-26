@@ -55,3 +55,11 @@ class Bot(object):
                 high_death_flag = False
             else:
                 cur_reward = self.r[0]
+
+            self.qvalues[state][act] = (1-self.lr) * (self.qvalues[state][act]) + \
+                                       self.lr * ( cur_reward + self.discount*max(self.qvalues[res_state]) )
+            t += 1
+        self.gameCNT += 1 
+        if dump_qvalues:
+            self.dump_qvalues() 
+        self.moves = []
