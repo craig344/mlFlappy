@@ -96,3 +96,51 @@ def main():
             pygame.image.load(PLAYERS_LIST[randPlayer][2]).convert_alpha(),
         )
 
+        # select random pipe sprites
+        pipeindex = random.randint(0, len(PIPES_LIST) - 1)
+        IMAGES['pipe'] = (
+            pygame.transform.rotate(
+                pygame.image.load(PIPES_LIST[pipeindex]).convert_alpha(), 180),
+            pygame.image.load(PIPES_LIST[pipeindex]).convert_alpha(),
+        )
+
+        # hismask for pipes
+        HITMASKS['pipe'] = (
+            getHitmask(IMAGES['pipe'][0]),
+            getHitmask(IMAGES['pipe'][1]),
+        )
+
+        # hitmask for player
+        HITMASKS['player'] = (
+            getHitmask(IMAGES['player'][0]),
+            getHitmask(IMAGES['player'][1]),
+            getHitmask(IMAGES['player'][2]),
+        )
+        movementInfo = showWelcomeAnimation()
+        crashInfo = mainGame(movementInfo)
+        score = crashInfo['score']
+        print(str(bot.gameCNT) + "," + str(score))
+
+
+def showWelcomeAnimation():
+    """Shows welcome screen animation of flappy bird"""
+    # index of player to blit on screen
+    playerIndex = 0
+    playerIndexGen = cycle([0, 1, 2, 1])
+    # iterator used to change playerIndex after every 5th iteration
+    loopIter = 0
+
+    playerx = int(SCREENWIDTH * 0.2)
+    playery = int((SCREENHEIGHT - IMAGES['player'][0].get_height()) / 2)
+
+    messagex = int((SCREENWIDTH - IMAGES['message'].get_width()) / 2)
+    messagey = int(SCREENHEIGHT * 0.12)
+
+    basex = 0
+    # amount by which base can maximum shift to left
+    baseShift = IMAGES['base'].get_width() - IMAGES['background'].get_width()
+
+    # player shm for up-down motion on welcome screen
+    playerShmVals = {'val': 0, 'dir': 1}
+
+
