@@ -37,3 +37,21 @@ class Bot(object):
         else:
             self.last_action = 1
             return 1
+
+    def update_scores(self, dump_qvalues = True):
+
+        history = list(reversed(self.moves))
+        high_death_flag = True if int(history[0][2].split("_")[1]) > 120 else False
+
+        t = 1
+        for exp in history:
+            state = exp[0]
+            act = exp[1]
+            res_state = exp[2]
+            if t == 1 or t == 2:
+                cur_reward = self.r[1]
+            elif high_death_flag and act:
+                cur_reward = self.r[1]
+                high_death_flag = False
+            else:
+                cur_reward = self.r[0]
