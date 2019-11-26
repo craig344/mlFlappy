@@ -63,3 +63,18 @@ class Bot(object):
         if dump_qvalues:
             self.dump_qvalues() 
         self.moves = []
+
+    def map_state(self, xdif, ydif, vel):
+
+        if xdif < 140:
+            xdif = int(xdif) - (int(xdif) % 10)
+        else:
+            xdif = int(xdif) - (int(xdif) % 70)
+
+        if ydif < 180:
+            ydif = int(ydif) - (int(ydif) % 10)
+        else:
+            ydif = int(ydif) - (int(ydif) % 60)
+
+        return str(int(xdif)) + "_" + str(int(ydif)) + "_" + str(vel)
+    
