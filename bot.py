@@ -1,0 +1,14 @@
+import json
+
+
+class Bot(object):
+    def __init__(self):
+        self.gameCNT = 0 
+        self.DUMPING_N = 25 
+        self.discount = 1.0
+        self.r = {0: 1, 1: -1000}
+        self.lr = 0 #0.7
+        self.load_qvalues()
+        self.last_state = "420_240_0"
+        self.last_action = 0
+        self.moves = []
