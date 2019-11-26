@@ -144,3 +144,102 @@ def showWelcomeAnimation():
     playerShmVals = {'val': 0, 'dir': 1}
 
 
+    while True:
+        return {
+            'playery': playery + playerShmVals['val'],
+            'basex': basex,
+            'playerIndexGen': playerIndexGen,
+        }
+
+        # adjust playery, playerIndex, basex
+        if (loopIter + 1) % 5 == 0:
+            playerIndex = next(playerIndexGen)
+        loopIter = (loopIter + 1) % 30
+        basex = -((-basex + 4) % baseShift)
+        playerShm(playerShmVals)
+
+        # draw sprites
+        SCREEN.blit(IMAGES['background'], (0,0))
+        SCREEN.blit(IMAGES['player'][playerIndex],
+                    (playerx, playery + playerShmVals['val']))
+        SCREEN.blit(IMAGES['message'], (messagex, messagey))
+        SCREEN.blit(IMAGES['base'], (basex, BASEY))
+
+        pygame.display.update()
+        FPSCLOCK.tick(FPS)
+
+
+def mainGame(movementInfo):
+
+    score = playerIndex = loopIter = 0
+    playerIndexGen = movementInfo['playerIndexGen']
+
+    playerx, playery = int(SCREENWIDTH * 0.2), movementInfo['playery']
+
+    basex = movementInfo['basex']
+    baseShift = IMAGES['base'].get_width() - IMAGES['background'].get_width()
+
+    # get 2 new pipes to add to upperPipes lowerPipes list
+    newPipe1 = getRandomPipe()
+    newPipe2 = getRandomPipe()
+
+    # list of upper pipes
+    upperPipes = [
+        {'x': SCREENWIDTH + 200, 'y': newPipe1[0]['y']},
+        {'x': SCREENWIDTH + 200 + (SCREENWIDTH / 2), 'y': newPipe2[0]['y']},
+    ]
+
+    # list of lowerpipe
+    lowerPipes = [
+        {'x': SCREENWIDTH + 200, 'y': newPipe1[1]['y']},
+        {'x': SCREENWIDTH + 200 + (SCREENWIDTH / 2), 'y': newPipe2[1]['y']},
+    ]
+
+    pipeVelX = -4
+
+    # player velocity, max velocity, downward accleration, accleration on flap
+    playerVelY    =  -9   # player's velocity along Y, default same as playerFlapped
+    playerMaxVelY =  10   # max vel along Y, max descend speed
+    playerMinVelY =  -8   # min vel along Y, max ascend speed
+    playerAccY    =   1   # players downward accleration
+    playerFlapAcc =  -9   # players speed on flapping
+    playerFlapped = False # True when player flaps
+
+
+    while True:
+        if -playerx + lowerPipes[0]['x'] > -30:
+            myPipe = lowerPipes[0]
+        else:
+            myPipe = lowerPipes[1]
+
+        for event in pygame.event.get():
+            if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
+                pygame.quit()
+                sys.exit()
+        if bot.act(myPipe['x'] - playerx, myPipe['y'] - playery, playerVelY):
+            if playery > -2 * IMAGES['player'][0].get_height():
+                playerVelY = playerFlapAcc
+                playerFlapped = True
+
+        # check for crash here
+        crashTest = checkCrash({'x': playerx, 'y': playery, 'index': playerIndex},
+                               upperPipes, lowerPipes)
+        if crashTest[0]:
+            bot.update_scores()
+            return {
+                'y': playery,
+                'groundCrash': crashTest[1],
+                'basex': basex,
+                'upperPipes': upperPipes,
+                'lowerPipes': lowerPipes,
+                'score': score,
+                'playerVelY': playerVelY,
+            }
+
+        # check for score
+        playerMidPos = playerx + IMAGES['player'][0].get_width() / 2
+        for pipe in upperPipes:
+            pipeMidPos = pipe['x'] + IMAGES['pipe'][0].get_width() / 2
+            if pipeMidPos <= playerMidPos < pipeMidPos + 4:
+                score += 1
+
