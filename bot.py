@@ -77,4 +77,9 @@ class Bot(object):
             ydif = int(ydif) - (int(ydif) % 60)
 
         return str(int(xdif)) + "_" + str(int(ydif)) + "_" + str(vel)
-    
+    def dump_qvalues(self, force = False):
+        if self.gameCNT % self.DUMPING_N == 0 or force:
+            fil = open("qvalues.json", "w")
+            json.dump(self.qvalues, fil)
+            fil.close()
+            print("Q-values updated on local file.")
